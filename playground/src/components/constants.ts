@@ -6,6 +6,10 @@ export const flags = [
     label: 'Disable auto-close'
   },
   {
+    id: 'stacked',
+    label: 'Enable stacked layout'
+  },
+  {
     id: 'hideProgressBar',
     label: 'Hide progress bar(less fanciness!)'
   },

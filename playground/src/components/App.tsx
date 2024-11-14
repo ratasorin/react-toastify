@@ -12,59 +12,67 @@ import { Radio } from './Radio';
 import { ToastCode, ToastCodeProps } from './ToastCode';
 import { flags, positions, themes, transitions, typs } from './constants';
 
-import React from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import '../../../scss/main.scss';
-import { Id, ToastContainer, toast } from '../../../src/index';
+import {
+  Id,
+  ToastContainer,
+  ToastContainerProps,
+  ToastOptions,
+  toast
+} from '../../../src/index';
 import { defaultProps } from '../../../src/components/ToastContainer';
 
 // Attach to window. Can be useful to debug
 // @ts-ignore
 window.toast = toast;
 
-// const animateCss = cssTransition({
-//   enter: 'animate__animated animate__bounceIn',
-//   exit: 'animate__animated animate__bounceOut'
-// });
-
-class App extends React.Component {
-  state = App.getDefaultState();
-  toastId: Id;
-  resolvePromise = true;
-
-  static getDefaultState() {
-    return {
-      ...defaultProps,
-      transition: 'bounce',
-      type: 'default',
-      progress: '',
-      disableAutoClose: false,
-      limit: 0,
-      theme: 'light'
-    };
-  }
-
-  handleReset = () =>
-    this.setState({
-      ...App.getDefaultState()
-    });
-
-  clearAll = () => toast.dismiss();
-
-  showToast = () => {
-    this.toastId =
-      this.state.type === 'default'
-        ? toast('🦄 Wow so easy !', { progress: this.state.progress })
-        : toast[this.state.type]('🚀 Wow so easy !', {
-            progress: this.state.progress
-          });
+const appDefaultState = {
+  ...defaultProps,
+  transitionType: 'bounce',
+  type: 'default',
+  progress: '',
+  disableAutoClose: false,
+  limit: 0,
+  theme: 'light'
+} as ToastOptions &
+  ToastContainerProps & {
+    disableAutoClose: boolean;
+    transitionType: keyof typeof transitions;
   };
 
-  firePromise = () => {
+const App = () => {
+  const [state, setState] = useState(appDefaultState);
+
+  const [toastId, setToastId] = useState<Id | undefined>();
+  const [resolvePromise, setResolvePromise] = useState(true);
+
+  const handleReset = useCallback(
+    () =>
+      setState({
+        ...appDefaultState
+      }),
+    []
+  );
+
+  const clearAll = useCallback(() => toast.dismiss(), []);
+
+  const showToast = useCallback(() => {
+    setToastId(() => {
+      return state.type === 'default'
+        ? toast('🦄 Wow so easy !', { progress: state.progress })
+        : toast[state.type]('🚀 Wow so easy !', {
+            progress: state.progress
+          });
+    });
+  }, [state]);
+
+  const firePromise = useCallback(() => {
     toast.promise(
       new Promise((resolve, reject) => {
         setTimeout(() => {
-          this.resolvePromise ? resolve(null) : reject(null);
-          this.resolvePromise = !this.resolvePromise;
+          resolvePromise ? resolve(null) : reject(null);
+          setResolvePromise(!resolvePromise);
         }, 3000);
       }),
       {
@@ -73,228 +81,267 @@ class App extends React.Component {
         error: 'Promise rejected 🤯'
       }
     );
-  };
+  }, [resolvePromise, setResolvePromise]);
 
-  updateToast = () =>
-    toast.update(this.toastId, { progress: this.state.progress });
+  const updateToast = useCallback(
+    () => toast.update(toastId, { progress: state.progress }),
+    [toastId, state]
+  );
 
-  handleAutoCloseDelay = e =>
-    this.setState({
-      autoClose: e.target.value > 0 ? parseInt(e.target.value, 10) : 1
-    });
+  const handleAutoCloseDelay = useCallback(
+    (event: any) =>
+      setState(s => ({
+        ...s,
+        autoClose: event.target.value > 0 ? parseInt(event.target.value, 10) : 1
+      })),
+    [setState]
+  );
 
-  isDefaultProps() {
+  const handleStackLimitChanged = useCallback(
+    (event: any) => {
+      const stackLimit = parseInt(event.target.value);
+      setState(s => ({
+        ...s,
+        stackLimit: stackLimit > 0 ? stackLimit : 1
+      }));
+    },
+    [setState]
+  );
+
+  const isDefaultProps = useCallback(() => {
     return (
-      this.state.position === 'top-right' &&
-      this.state.autoClose === 5000 &&
-      !this.state.disableAutoClose &&
-      !this.state.hideProgressBar &&
-      !this.state.newestOnTop &&
-      !this.state.rtl &&
-      this.state.pauseOnFocusLoss &&
-      this.state.pauseOnHover &&
-      this.state.closeOnClick &&
-      this.state.draggable &&
-      this.state.theme === 'light'
+      state.position === 'top-right' &&
+      state.autoClose === 5000 &&
+      state.disableAutoClose &&
+      state.hideProgressBar &&
+      state.newestOnTop &&
+      state.rtl &&
+      state.pauseOnFocusLoss &&
+      state.pauseOnHover &&
+      state.closeOnClick &&
+      state.draggable &&
+      state.theme === 'light'
     );
-  }
+  }, [state]);
 
-  handleRadioOrSelect = e =>
-    this.setState({
-      [e.target.name]:
-        e.target.name === 'limit'
-          ? parseInt(e.target.value, 10)
-          : e.target.value
-    });
+  const handleRadioOrSelect = useCallback(
+    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setState(state => ({
+        ...state,
+        [event.target.name]:
+          event.target.name === 'limit'
+            ? parseInt(event.target.value, 10)
+            : event.target.value
+      })),
+    [setState]
+  );
 
-  toggleCheckbox = e =>
-    this.setState({
-      [e.target.name]: !this.state[e.target.name]
-    });
+  const toggleCheckbox = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) =>
+      setState(state => ({
+        ...state,
+        [event.target.name]: !state[event.target.name]
+      })),
+    [setState]
+  );
 
-  renderFlags() {
+  const renderFlags = useCallback(() => {
     return flags.map(({ id, label }) => (
       <li key={id}>
         <Checkbox
           id={id}
           label={label}
-          onChange={this.toggleCheckbox}
-          checked={this.state[id]}
+          onChange={toggleCheckbox}
+          checked={state[id]}
         />
       </li>
     ));
-  }
+  }, [state]);
 
-  render() {
-    return (
-      <main>
-        <Header />
-        <div className="container">
-          <p>
-            By default, all toasts will inherit ToastContainer's props. Props
-            defined on toast supersede ToastContainer's props. Props marked with
-            * can only be set on the ToastContainer. The demo is not exhaustive,
-            check the repo for more!
-          </p>
-          <section className="container__options">
-            <div>
-              <h3>Position</h3>
-              <ul>
-                <Radio
-                  options={positions}
-                  name="position"
-                  checked={this.state.position as string}
-                  onChange={this.handleRadioOrSelect}
-                />
-              </ul>
-            </div>
-            <div>
-              <h3>Type</h3>
-              <ul>
-                <Radio
-                  options={typs}
-                  name="type"
-                  checked={this.state.type}
-                  onChange={this.handleRadioOrSelect}
-                />
-              </ul>
-            </div>
-            <div>
-              <h3>Options</h3>
-              <div className="options_wrapper">
-                <label htmlFor="autoClose">
-                  Delay
-                  <input
-                    type="number"
-                    name="autoClose"
-                    id="autoClose"
-                    value={this.state.autoClose as unknown as string}
-                    onChange={this.handleAutoCloseDelay}
-                    disabled={this.state.disableAutoClose}
-                  />
-                  ms
-                </label>
-                <label htmlFor="transition">
-                  Transition
-                  <select
-                    name="transition"
-                    id="transition"
-                    onChange={this.handleRadioOrSelect}
-                    value={this.state.transition}
-                  >
-                    {Object.keys(transitions).map(k => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label htmlFor="theme">
-                  Theme
-                  <select
-                    name="theme"
-                    id="theme"
-                    onChange={this.handleRadioOrSelect}
-                    value={this.state.theme}
-                  >
-                    {themes.map(k => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label htmlFor="progress">
-                  Progress
-                  <input
-                    type="number"
-                    name="progress"
-                    id="progress"
-                    value={this.state.progress}
-                    onChange={this.handleRadioOrSelect}
-                  />
-                </label>
-                <label htmlFor="limit">
-                  Limit
-                  <input
-                    type="number"
-                    name="limit"
-                    id="limit"
-                    value={this.state.limit}
-                    onChange={this.handleRadioOrSelect}
-                  />
-                </label>
-              </div>
-              <ul>{this.renderFlags()}</ul>
-            </div>
-          </section>
-          <section>
-            <ContainerCode
-              {...(this.state as unknown as ContainerCodeProps)}
-              isDefaultProps={this.isDefaultProps() as boolean}
-            />
-            <ToastCode {...(this.state as unknown as ToastCodeProps)} />
-          </section>
-          <div className="cta__wrapper">
-            <ul className="container__actions">
-              <li>
-                <button className="btn" onClick={this.showToast}>
-                  <span role="img" aria-label="show alert">
-                    🚀
-                  </span>{' '}
-                  Show Toast
-                </button>
-              </li>
-              <li>
-                <button className="btn" onClick={this.firePromise}>
-                  Promise
-                </button>
-              </li>
-              <li>
-                <button className="btn" onClick={this.updateToast}>
-                  Update
-                </button>
-              </li>
-              <li>
-                <button className="btn bg-red" onClick={this.clearAll}>
-                  <span role="img" aria-label="clear all">
-                    💩
-                  </span>{' '}
-                  Clear All
-                </button>
-              </li>
-              <li>
-                <button className="btn bg-blue" onClick={this.handleReset}>
-                  <span role="img" aria-label="reset options">
-                    🔄
-                  </span>{' '}
-                  Reset
-                </button>
-              </li>
+  useEffect(() => {
+    console.log({ state });
+  }, [state]);
+
+  return (
+    <main>
+      <Header />
+      <div className="container">
+        <p>
+          By default, all toasts will inherit ToastContainer's props. Props
+          defined on toast supersede ToastContainer's props. Props marked with *
+          can only be set on the ToastContainer. The demo is not exhaustive,
+          check the repo for more!
+        </p>
+        <section className="container__options">
+          <div>
+            <h3>Position</h3>
+            <ul>
+              <Radio
+                options={positions}
+                name="position"
+                checked={state.position as string}
+                onChange={handleRadioOrSelect}
+              />
             </ul>
           </div>
+          <div>
+            <h3>Type</h3>
+            <ul>
+              <Radio
+                options={typs}
+                name="type"
+                checked={state.type}
+                onChange={handleRadioOrSelect}
+              />
+            </ul>
+          </div>
+          <div>
+            <h3>Options</h3>
+            <div className="options_wrapper">
+              <label htmlFor="autoClose">
+                Delay
+                <input
+                  type="number"
+                  name="autoClose"
+                  id="autoClose"
+                  value={state.autoClose as unknown as string}
+                  onChange={handleAutoCloseDelay}
+                  disabled={state.disableAutoClose}
+                />
+                ms
+              </label>
+
+              <label htmlFor="stackLimit">
+                Stack Limit
+                <input
+                  type="number"
+                  name="stackLimit"
+                  id="stackLimit"
+                  value={state.stackLimit as unknown as string}
+                  onChange={handleStackLimitChanged}
+                />
+              </label>
+
+              <label htmlFor="transition">
+                Transition
+                <select
+                  name="transitionType"
+                  id="transitionType"
+                  onChange={handleRadioOrSelect}
+                  value={state.transitionType}
+                >
+                  {Object.keys(transitions).map(k => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label htmlFor="theme">
+                Theme
+                <select
+                  name="theme"
+                  id="theme"
+                  onChange={handleRadioOrSelect}
+                  value={state.theme}
+                >
+                  {themes.map(k => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label htmlFor="progress">
+                Progress
+                <input
+                  type="number"
+                  name="progress"
+                  id="progress"
+                  value={state.progress}
+                  onChange={handleRadioOrSelect}
+                />
+              </label>
+              <label htmlFor="limit">
+                Limit
+                <input
+                  type="number"
+                  name="limit"
+                  id="limit"
+                  value={state.limit}
+                  onChange={handleRadioOrSelect}
+                />
+              </label>
+            </div>
+            <ul>{renderFlags()}</ul>
+          </div>
+        </section>
+        <section>
+          <ContainerCode
+            {...(state as unknown as ContainerCodeProps)}
+            isDefaultProps={isDefaultProps() as boolean}
+          />
+          <ToastCode {...(state as unknown as ToastCodeProps)} />
+        </section>
+        <div className="cta__wrapper">
+          <ul className="container__actions">
+            <li>
+              <button className="btn" onClick={showToast}>
+                <span role="img" aria-label="show alert">
+                  🚀
+                </span>{' '}
+                Show Toast
+              </button>
+            </li>
+            <li>
+              <button className="btn" onClick={firePromise}>
+                Promise
+              </button>
+            </li>
+            <li>
+              <button className="btn" onClick={updateToast}>
+                Update
+              </button>
+            </li>
+            <li>
+              <button className="btn bg-red" onClick={clearAll}>
+                <span role="img" aria-label="clear all">
+                  💩
+                </span>{' '}
+                Clear All
+              </button>
+            </li>
+            <li>
+              <button className="btn bg-blue" onClick={handleReset}>
+                <span role="img" aria-label="reset options">
+                  🔄
+                </span>{' '}
+                Reset
+              </button>
+            </li>
+          </ul>
         </div>
-        <ToastContainer
-          {...this.state}
-          transition={transitions[this.state.transition]}
-          autoClose={this.state.disableAutoClose ? false : this.state.autoClose}
-        />
-        <ToastContainer
-          containerId="xxx"
-          position="top-left"
-          autoClose={false}
-          theme="dark"
-          limit={3}
-        />
-        <ToastContainer
-          limit={3}
-          containerId="yyy"
-          autoClose={false}
-          position="top-right"
-        />
-      </main>
-    );
-  }
-}
+      </div>
+      <ToastContainer
+        {...state}
+        transition={transitions[state.transitionType]}
+        autoClose={state.disableAutoClose ? false : state.autoClose}
+      />
+      <ToastContainer
+        containerId="xxx"
+        position="top-left"
+        autoClose={false}
+        theme="dark"
+        limit={3}
+      />
+      <ToastContainer
+        limit={3}
+        containerId="yyy"
+        autoClose={false}
+        position="top-right"
+      />
+    </main>
+  );
+};
 
 export { App };

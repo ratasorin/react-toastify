@@ -257,6 +257,11 @@ export interface ToastContainerProps extends CommonOptions {
   stacked?: boolean;
 
   /**
+   * Max number of cards displayed by the toast
+   */
+  stackLimit?: number;
+
+  /**
    * Whether or not to display the newest toast on top.
    * `Default: false`
    */

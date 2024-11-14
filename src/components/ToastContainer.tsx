@@ -1,5 +1,5 @@
 import cx from 'clsx';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { toast } from '../core';
 import { useToastContainer } from '../hooks/useToastContainer';
@@ -88,6 +88,8 @@ export function ToastContainer(props: ToastContainerProps) {
     }
   }, [collapsed, count, stacked]);
 
+  const displayToastInStackedMode = useCallback(() => {}, [])
+
   return (
     <div
       ref={containerRef}
@@ -112,7 +114,7 @@ export function ToastContainer(props: ToastContainerProps) {
             style={containerStyle}
             key={`container-${position}`}
           >
-            {toastList.map(({ content, props: toastProps }) => {
+            {toastList.map(({ content, props: toastProps }, index) => {
               return (
                 <Toast
                   {...toastProps}
@@ -122,7 +124,7 @@ export function ToastContainer(props: ToastContainerProps) {
                     toastProps.toastId,
                     toastProps.containerId
                   )}
-                  style={toastProps.style}
+                  style={{...toastProps.style, display:  }}
                   key={`toast-${toastProps.key}`}
                 >
                   {content}
