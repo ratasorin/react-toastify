@@ -66,15 +66,25 @@ export function cssTransition({
     position,
     preventExitTransition,
     done,
+    disableEnterAnimation,
     nodeRef,
     isIn,
     playToast
   }: ToastTransitionProps) {
-    const enterClassName = appendPosition ? `${enter}--${position}` : enter;
+    const enterClassName = disableEnterAnimation
+      ? null
+      : appendPosition
+        ? `${enter}--${position}`
+        : enter;
     const exitClassName = appendPosition ? `${exit}--${position}` : exit;
     const animationStep = useRef(AnimationStep.Enter);
 
     useLayoutEffect(() => {
+      if (!enterClassName) {
+        playToast();
+        return;
+      }
+
       const node = nodeRef.current!;
       const classToToken = enterClassName.split(' ');
 

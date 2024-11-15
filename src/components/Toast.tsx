@@ -20,6 +20,7 @@ export const Toast: React.FC<ToastProps> = props => {
     closeButton,
     children,
     autoClose,
+    disableEnterAnimation,
     onClick,
     type,
     hideProgressBar,
@@ -86,6 +87,7 @@ export const Toast: React.FC<ToastProps> = props => {
       preventExitTransition={preventExitTransition}
       nodeRef={toastRef}
       playToast={playToast}
+      disableEnterAnimation={disableEnterAnimation}
     >
       <div
         id={toastId as string}

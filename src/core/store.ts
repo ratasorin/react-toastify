@@ -85,8 +85,8 @@ export function clearWaitingQueue(p: ClearWaitingQueueParams = {}) {
 }
 
 let isProcessingQueue = false;
-const interval = 500,
-  bulkThreshold = 500;
+const interval = 600,
+  bulkThreshold = 600;
 let lastPushTime: number = 0;
 
 export function pushToast<TData>(
@@ -100,6 +100,14 @@ export function pushToast<TData>(
 
   if (!isProcessingQueue) {
     isProcessingQueue = true;
+
+    if (renderQueue.length === 1) {
+      const nextToast = renderQueue.shift();
+      if (nextToast)
+        containers.forEach(container => {
+          container.buildToast(nextToast.content, nextToast.options);
+        });
+    }
 
     const intervalId = setInterval(() => {
       if (renderQueue.length === 0) {
@@ -116,7 +124,10 @@ export function pushToast<TData>(
         // Bulk build all toasts in the queue
         containers.forEach(container => {
           renderQueue.forEach(toast =>
-            container.buildToast(toast.content, toast.options)
+            container.buildToast(toast.content, {
+              ...toast.options,
+              disableEnterAnimation: true
+            })
           );
         });
         renderQueue = [];

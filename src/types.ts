@@ -296,6 +296,7 @@ export interface ToastTransitionProps {
   nodeRef: React.RefObject<HTMLElement>;
   children?: React.ReactNode;
   playToast(): void;
+  disableEnterAnimation?: boolean;
 }
 
 /**
@@ -307,6 +308,7 @@ export interface ToastProps extends ToastOptions {
   toastId: Id;
   key: Id;
   transition: ToastTransition;
+  disableEnterAnimation?: boolean;
   closeToast: () => void;
   position: ToastPosition;
   children?: ToastContent;
