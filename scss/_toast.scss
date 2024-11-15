@@ -17,22 +17,23 @@
   /* webkit only issue #791 */
   z-index: 0;
   overflow: hidden;
-  
+
   &--stacked {
     position: absolute;
     width: 100%;
     transform: translate3d(0, var(--y), 0) scale(var(--s));
     transition: transform 0.3s;
 
-    &[data-collapsed] .#{$rt-namespace}__toast-body, &[data-collapsed] .#{$rt-namespace}__close-button  {
+    &[data-collapsed] .#{$rt-namespace}__toast-body,
+    &[data-collapsed] .#{$rt-namespace}__close-button {
       transition: opacity 0.1s;
     }
 
-    &[data-collapsed="false"]{
+    &[data-collapsed='false'] {
       overflow: visible;
     }
 
-    &[data-collapsed="true"]:not(:last-child) > * {
+    &[data-collapsed='true']:not(:last-child) > * {
       opacity: 0;
     }
 
@@ -45,24 +46,24 @@
       bottom: 100%;
     }
 
-    &[data-pos="top"] {
+    &[data-pos='top'] {
       top: 0;
     }
 
-    &[data-pos="bot"]  {
+    &[data-pos='bot'] {
       bottom: 0;
     }
 
-    &[data-pos="bot"]#{&}:before {
+    &[data-pos='bot']#{&}:before {
       transform-origin: top;
     }
 
-    &[data-pos="top"]#{&}:before {
+    &[data-pos='top']#{&}:before {
       transform-origin: bottom;
     }
 
-    &:before{
-      content: "";
+    &:before {
+      content: '';
       position: absolute;
       left: 0;
       right: 0;
@@ -72,7 +73,7 @@
       z-index: -1;
     }
   }
-  
+
   &--rtl {
     direction: rtl;
   }

@@ -88,7 +88,18 @@ export function ToastContainer(props: ToastContainerProps) {
     }
   }, [collapsed, count, stacked]);
 
-  const displayToastInStackedMode = useCallback(() => {}, [])
+  const displayToastInStackedMode = useCallback(
+    (index: number) => {
+      if (collapsed) {
+        if (stacked) {
+          if (!props.stackLimit) return 'visible';
+          if (index > props.stackLimit) return 'hidden';
+          else return 'visible';
+        } else return 'visible';
+      } else return 'visible';
+    },
+    [stacked, props.stackLimit, collapsed]
+  );
 
   return (
     <div
@@ -124,7 +135,12 @@ export function ToastContainer(props: ToastContainerProps) {
                     toastProps.toastId,
                     toastProps.containerId
                   )}
-                  style={{...toastProps.style, display:  }}
+                  style={{
+                    ...toastProps.style,
+                    visibility: displayToastInStackedMode(
+                      toastList.length - index
+                    )
+                  }}
                   key={`toast-${toastProps.key}`}
                 >
                   {content}

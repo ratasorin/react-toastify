@@ -10,9 +10,9 @@ import { ContainerCode, ContainerCodeProps } from './ContainerCode';
 import { Header } from './Header';
 import { Radio } from './Radio';
 import { ToastCode, ToastCodeProps } from './ToastCode';
-import { flags, positions, themes, transitions, typs } from './constants';
+import { flags, positions, themes, transitions, types } from './constants';
 
-import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
 import '../../../scss/main.scss';
 import {
   Id,
@@ -33,8 +33,12 @@ const appDefaultState = {
   type: 'default',
   progress: '',
   disableAutoClose: false,
-  limit: 0,
-  theme: 'light'
+  autoClose: 5000,
+  theme: 'light',
+  stacked: true,
+  stackLimit: 4,
+  hideProgressBar: false,
+  position: 'bottom-right'
 } as ToastOptions &
   ToastContainerProps & {
     disableAutoClose: boolean;
@@ -158,10 +162,6 @@ const App = () => {
     ));
   }, [state]);
 
-  useEffect(() => {
-    console.log({ state });
-  }, [state]);
-
   return (
     <main>
       <Header />
@@ -188,7 +188,7 @@ const App = () => {
             <h3>Type</h3>
             <ul>
               <Radio
-                options={typs}
+                options={types}
                 name="type"
                 checked={state.type}
                 onChange={handleRadioOrSelect}
@@ -326,19 +326,6 @@ const App = () => {
         {...state}
         transition={transitions[state.transitionType]}
         autoClose={state.disableAutoClose ? false : state.autoClose}
-      />
-      <ToastContainer
-        containerId="xxx"
-        position="top-left"
-        autoClose={false}
-        theme="dark"
-        limit={3}
-      />
-      <ToastContainer
-        limit={3}
-        containerId="yyy"
-        autoClose={false}
-        position="top-right"
       />
     </main>
   );

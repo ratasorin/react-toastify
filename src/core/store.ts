@@ -84,16 +84,57 @@ export function clearWaitingQueue(p: ClearWaitingQueueParams = {}) {
   });
 }
 
+let isProcessingQueue = false;
+const interval = 500,
+  bulkThreshold = 500;
+let lastPushTime: number = 0;
+
 export function pushToast<TData>(
   content: ToastContent<TData>,
   options: NotValidatedToastProps
 ) {
   if (!canBeRendered(content)) return;
-  if (!hasContainers()) renderQueue.push({ content, options });
 
-  containers.forEach(c => {
-    c.buildToast(content, options);
-  });
+  renderQueue.push({ content, options });
+  lastPushTime = Date.now();
+
+  if (!isProcessingQueue) {
+    isProcessingQueue = true;
+
+    const intervalId = setInterval(() => {
+      if (renderQueue.length === 0) {
+        // Stop processing if the queue is empty
+        clearInterval(intervalId);
+        isProcessingQueue = false;
+        return;
+      }
+
+      const now = Date.now();
+      const timeSinceLastPush = now - lastPushTime;
+
+      if (timeSinceLastPush >= bulkThreshold) {
+        // Bulk build all toasts in the queue
+        containers.forEach(container => {
+          renderQueue.forEach(toast =>
+            container.buildToast(toast.content, toast.options)
+          );
+        });
+        renderQueue = [];
+        clearInterval(intervalId);
+        isProcessingQueue = false;
+        return;
+      }
+
+      // Pull the next toast from the queue
+      const nextToast = renderQueue.shift();
+
+      if (!nextToast) return; // Safety check
+
+      containers.forEach(container => {
+        container.buildToast(nextToast.content, nextToast.options);
+      });
+    }, interval);
+  }
 }
 
 interface ToggleToastParams {
