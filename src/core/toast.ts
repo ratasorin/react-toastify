@@ -34,9 +34,10 @@ function getToastId<TData>(options?: ToastOptions<TData>) {
  */
 function dispatchToast<TData>(
   content: ToastContent<TData>,
-  options: NotValidatedToastProps
+  options: NotValidatedToastProps,
+  toggle?: (play: boolean) => any
 ): Id {
-  pushToast(content, options);
+  pushToast(content, options, toggle);
   return options.toastId;
 }
 
@@ -325,7 +326,7 @@ toast.update = <TData = unknown>(
     const content = nextOptions.render || oldContent;
     delete nextOptions.render;
 
-    dispatchToast(content, nextOptions);
+    dispatchToast(content, nextOptions, toast.toggle);
   }
 };
 

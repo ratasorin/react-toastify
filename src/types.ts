@@ -46,6 +46,7 @@ export type ToastClassName =
       type?: TypeOptions;
       defaultClassName?: string;
       position?: ToastPosition;
+      stacked?: boolean;
       rtl?: boolean;
     }) => string)
   | string;
@@ -297,6 +298,8 @@ export interface ToastTransitionProps {
   children?: React.ReactNode;
   playToast(): void;
   disableEnterAnimation?: boolean;
+  toastId: string;
+  pauseToast(): void;
 }
 
 /**

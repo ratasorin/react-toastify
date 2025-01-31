@@ -14,9 +14,11 @@ export const Toast: React.FC<ToastProps> = props => {
     preventExitTransition,
     toastRef,
     eventHandlers,
-    playToast
+    playToast,
+    pauseToast
   } = useToast(props);
   const {
+    stacked,
     closeButton,
     children,
     autoClose,
@@ -53,6 +55,9 @@ export const Toast: React.FC<ToastProps> = props => {
     },
     {
       [`${Default.CSS_NAMESPACE}__toast--close-on-click`]: closeOnClick
+    },
+    {
+      [`${Default.CSS_NAMESPACE}__toast--stacked`]: stacked
     }
   );
   const cssClasses = isFn(className)
@@ -60,7 +65,8 @@ export const Toast: React.FC<ToastProps> = props => {
         rtl,
         position,
         type,
-        defaultClassName
+        defaultClassName,
+        stacked
       })
     : cx(defaultClassName, className);
   const icon = getIcon(props);
@@ -82,11 +88,13 @@ export const Toast: React.FC<ToastProps> = props => {
   return (
     <Transition
       isIn={isIn}
+      pauseToast={pauseToast}
       done={deleteToast}
       position={position}
       preventExitTransition={preventExitTransition}
       nodeRef={toastRef}
       playToast={playToast}
+      toastId={props.toastId as string}
       disableEnterAnimation={disableEnterAnimation}
     >
       <div

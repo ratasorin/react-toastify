@@ -45,6 +45,7 @@ export function createContainerObserver(
   let activeToasts: Id[] = [];
   let snapshot: Toast[] = [];
   let props = containerProps;
+  let isPaused = false;
   const toasts = new Map<Id, Toast>();
   const listeners = new Set<Notify>();
 
@@ -69,10 +70,36 @@ export function createContainerObserver(
     return containerMismatch || isDuplicate;
   };
 
-  const toggle = (v: boolean, id?: Id) => {
+  const toggle = (play: boolean, id?: Id) => {
+    isPaused = !play;
+
+    const toastToPause: Toast[] = [];
+
     toasts.forEach(t => {
-      if (id == null || id === t.props.toastId) isFn(t.toggle) && t.toggle(v);
+      if (id == null || id === t.props.toastId) {
+        if (isFn(t.toggle)) {
+          setTimeout(() => {
+            t.toggle(play);
+          }, 200);
+
+          toastToPause.push(t);
+        } else {
+          console.log(
+            'OOPS  t.toggle is:',
+            t.toggle,
+            ' for component:',
+            t.props.toastId
+          );
+        }
+      }
     });
+    console.log(
+      `THE FOlLOWING TOAST WILL BE ${isPaused ? 'PAUSED' : 'RUNNING'}`,
+      toastToPause.map(t => ({
+        toggle: t.toggle,
+        id: t.props.toastId
+      }))
+    );
   };
 
   const removeToast = (id?: Id) => {
@@ -92,9 +119,12 @@ export function createContainerObserver(
     if (toast.staleId) toasts.delete(toast.staleId);
 
     toasts.set(toastId, toast);
-    activeToasts = [...activeToasts, toast.props.toastId].filter(
-      v => v !== toast.staleId
-    );
+    if (!activeToasts.find(id => id === toast.props.toastId)) {
+      activeToasts = [...activeToasts, toast.props.toastId].filter(
+        v => v !== toast.staleId
+      );
+    }
+
     notify();
     dispatchChanges(toToastItem(toast, isNew ? 'added' : 'updated'));
 
@@ -202,6 +232,8 @@ export function createContainerObserver(
     } else {
       addActiveToast(activeToast);
     }
+
+    return activeToast;
   };
 
   return {
@@ -211,6 +243,7 @@ export function createContainerObserver(
     toggle,
     removeToast,
     toasts,
+    isPaused: () => isPaused,
     clearQueue,
     buildToast,
     setProps(p: ToastContainerProps) {

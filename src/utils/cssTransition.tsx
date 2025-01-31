@@ -3,6 +3,7 @@ import { collapseToast } from './collapseToast';
 import { Default } from './constant';
 
 import { ToastTransitionProps } from '../types';
+import { containers } from '../core/store';
 
 export interface CSSTransitionProps {
   /**
@@ -69,7 +70,8 @@ export function cssTransition({
     disableEnterAnimation,
     nodeRef,
     isIn,
-    playToast
+    playToast,
+    toastId
   }: ToastTransitionProps) {
     const enterClassName = disableEnterAnimation
       ? null
@@ -81,6 +83,11 @@ export function cssTransition({
 
     useLayoutEffect(() => {
       if (!enterClassName) {
+        console.log(
+          'Disabled Enter Animation for toast:',
+          toastId,
+          ' will cause the toast to play!'
+        );
         playToast();
         return;
       }
@@ -90,8 +97,19 @@ export function cssTransition({
 
       const onEntered = (e: AnimationEvent) => {
         if (e.target !== nodeRef.current) return;
+        if (
+          containers.values().find(c => c.toasts.get(toastId) && c.isPaused())
+        ) {
+          // DO NOT PLAY TOAST!
+        } else playToast();
 
-        playToast();
+        console.log(
+          'STATING HERE IN cssTransition > onEntered, for toast:',
+          toastId,
+          e.target,
+          nodeRef.current
+        );
+
         node.removeEventListener('animationend', onEntered);
         node.removeEventListener('animationcancel', onEntered);
         if (

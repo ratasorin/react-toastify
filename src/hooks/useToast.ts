@@ -1,4 +1,4 @@
-import { DOMAttributes, useEffect, useRef, useState } from 'react';
+import { DOMAttributes, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ToastProps } from '../types';
 import { Default, Direction } from '../utils';
@@ -26,6 +26,15 @@ export function useToast(props: ToastProps) {
     didMove: false
   }).current;
   const { autoClose, pauseOnHover, closeToast, onClick, closeOnClick } = props;
+
+  useEffect(() => {
+    console.log(
+      'TOAST:',
+      props.toastId,
+      ' IS ',
+      isRunning ? 'RUNNING' : 'PAUSED!'
+    );
+  }, [isRunning]);
 
   registerToggle({
     id: props.toastId,
