@@ -27,15 +27,6 @@ export function useToast(props: ToastProps) {
   }).current;
   const { autoClose, pauseOnHover, closeToast, onClick, closeOnClick } = props;
 
-  useEffect(() => {
-    console.log(
-      'TOAST:',
-      props.toastId,
-      ' IS ',
-      isRunning ? 'RUNNING' : 'PAUSED!'
-    );
-  }, [isRunning]);
-
   registerToggle({
     id: props.toastId,
     containerId: props.containerId,

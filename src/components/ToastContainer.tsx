@@ -28,6 +28,7 @@ export function ToastContainer(props: ToastContainerProps) {
     ...defaultProps,
     ...props
   };
+
   const stacked = props.stacked;
   const [collapsed, setIsCollapsed] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);

@@ -103,34 +103,9 @@ const interval = 600,
   bulkThreshold = 600;
 let lastPushTime: number = 0;
 
-export function pushToast<TData>(
-  content: ToastContent<TData>,
-  options: NotValidatedToastProps,
-  toggle?: (play: boolean) => void
-) {
-  if (!canBeRendered(content)) return;
-
-  renderQueue.push({ content, options, toggle });
-  lastPushTime = Date.now();
-
+const handleStackedLayout = (container: ContainerObserver) => {
   if (!isProcessingQueue) {
     isProcessingQueue = true;
-
-    if (renderQueue.length === 1) {
-      const nextToast = renderQueue.shift();
-      if (nextToast) {
-        containers.forEach(container => {
-          const newToast = container.buildToast(nextToast.content, {
-            ...nextToast.options,
-            disableEnterAnimation: container.isPaused()
-          });
-          if (container.isPaused())
-            setTimeout(() => {
-              toast.pause({ id: newToast?.props.toastId });
-            }, 50);
-        });
-      }
-    }
 
     const intervalId = setInterval(() => {
       if (renderQueue.length === 0) {
@@ -143,22 +118,29 @@ export function pushToast<TData>(
       const now = Date.now();
       const timeSinceLastPush = now - lastPushTime;
 
-      if (timeSinceLastPush >= bulkThreshold || renderQueue.length > 10) {
+      if (timeSinceLastPush >= bulkThreshold) {
         // Bulk build all toasts in the queue
-        containers.forEach(container => {
-          renderQueue.forEach(_toast => {
-            const newToast = container.buildToast(_toast.content, {
-              ..._toast.options,
-              disableEnterAnimation: true
-            });
 
-            if (container.isPaused()) {
-              console.log('SHOULD PAUSE THE BULK!');
-              setTimeout(() => {
-                toast.pause({ id: newToast?.props.toastId });
-              }, 50);
-            }
+        renderQueue.forEach(_toast => {
+          if (
+            // check if toast belongs to this container
+            _toast.options.containerId !== container.id &&
+            // if there is only one container, all toasts will belong to it!
+            container.id !== Default.CONTAINER_ID
+          )
+            return;
+
+          const newToast = container.buildToast(_toast.content, {
+            ..._toast.options,
+            disableEnterAnimation: true
           });
+
+          if (container.isPaused()) {
+            // delay 1 cycle to make sure components were mounted
+            setTimeout(() => {
+              toast.pause({ id: newToast?.props.toastId });
+            }, 0);
+          }
         });
         renderQueue.length = 0;
         clearInterval(intervalId);
@@ -169,25 +151,46 @@ export function pushToast<TData>(
       // Pull the next toast from the queue
       const nextToast = renderQueue.shift();
 
-      if (!nextToast) return; // Safety check
+      if (!nextToast) return;
 
-      containers.forEach(container => {
-        const newToast = container.buildToast(nextToast.content, {
-          ...nextToast.options,
-          disableEnterAnimation: container.isPaused()
-        });
-        console.log('I AM RETRIEVING ONE TOAST:', newToast?.props.toastId, {
-          isPaused: container.isPaused(),
-          toggle: nextToast.toggle
-        });
+      if (
+        // check if toast belongs to this container
+        nextToast.options.containerId !== container.id &&
+        // if there is only one container, all toasts will belong to it!
+        container.id !== Default.CONTAINER_ID
+      )
+        return;
 
-        if (container.isPaused())
-          setTimeout(() => {
-            toast.pause({ id: newToast?.props.toastId });
-          }, 50);
+      const newToast = container.buildToast(nextToast.content, {
+        ...nextToast.options,
+        disableEnterAnimation: container.isPaused()
       });
+
+      if (container.isPaused()) {
+        // delay 1 cycle to make sure components were mounted
+        setTimeout(() => {
+          toast.pause({ id: newToast?.props.toastId });
+        }, 0);
+      }
     }, interval);
   }
+};
+
+export function pushToast<TData>(
+  content: ToastContent<TData>,
+  options: NotValidatedToastProps,
+  toggle?: (play: boolean) => void
+) {
+  if (!canBeRendered(content)) return;
+
+  renderQueue.push({ content, options, toggle });
+  lastPushTime = Date.now();
+
+  containers.forEach(container => {
+    if (container.getProps().stacked) {
+      handleStackedLayout(container);
+    } else container.buildToast(content, options);
+  });
 }
 
 interface ToggleToastParams {

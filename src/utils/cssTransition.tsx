@@ -83,11 +83,6 @@ export function cssTransition({
 
     useLayoutEffect(() => {
       if (!enterClassName) {
-        console.log(
-          'Disabled Enter Animation for toast:',
-          toastId,
-          ' will cause the toast to play!'
-        );
         playToast();
         return;
       }
@@ -97,18 +92,12 @@ export function cssTransition({
 
       const onEntered = (e: AnimationEvent) => {
         if (e.target !== nodeRef.current) return;
-        if (
-          containers.values().find(c => c.toasts.get(toastId) && c.isPaused())
-        ) {
-          // DO NOT PLAY TOAST!
-        } else playToast();
 
-        console.log(
-          'STATING HERE IN cssTransition > onEntered, for toast:',
-          toastId,
-          e.target,
-          nodeRef.current
-        );
+        const someElementsPaused = containers
+          .values()
+          .find(c => c.toasts.get(toastId) && c.isPaused());
+
+        if (!someElementsPaused) playToast();
 
         node.removeEventListener('animationend', onEntered);
         node.removeEventListener('animationcancel', onEntered);

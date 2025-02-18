@@ -6,6 +6,7 @@ export function useToastContainer(props: ToastContainerProps) {
   const { subscribe, getSnapshot, setProps } = useRef(
     registerContainer(props)
   ).current;
+  console.log({ props });
   setProps(props);
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 

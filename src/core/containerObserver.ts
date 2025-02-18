@@ -78,13 +78,12 @@ export function createContainerObserver(
     toasts.forEach(t => {
       if (id == null || id === t.props.toastId) {
         if (isFn(t.toggle)) {
-          setTimeout(() => {
-            t.toggle(play);
-          }, 200);
+          t.toggle(play);
 
           toastToPause.push(t);
         } else {
-          console.log(
+          // show a warning message
+          console.warn(
             'OOPS  t.toggle is:',
             t.toggle,
             ' for component:',
@@ -93,13 +92,6 @@ export function createContainerObserver(
         }
       }
     });
-    console.log(
-      `THE FOlLOWING TOAST WILL BE ${isPaused ? 'PAUSED' : 'RUNNING'}`,
-      toastToPause.map(t => ({
-        toggle: t.toggle,
-        id: t.props.toastId
-      }))
-    );
   };
 
   const removeToast = (id?: Id) => {
@@ -238,7 +230,7 @@ export function createContainerObserver(
 
   return {
     id,
-    props,
+    getProps: () => props,
     observe,
     toggle,
     removeToast,
