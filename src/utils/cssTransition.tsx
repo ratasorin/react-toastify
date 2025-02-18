@@ -1,9 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { collapseToast } from './collapseToast';
 import { Default } from './constant';
-
 import { ToastTransitionProps } from '../types';
-import { containers } from '../core/store';
+import { getContainers } from '../core/store';
 
 export interface CSSTransitionProps {
   /**
@@ -93,9 +92,9 @@ export function cssTransition({
       const onEntered = (e: AnimationEvent) => {
         if (e.target !== nodeRef.current) return;
 
-        const someElementsPaused = containers
-          .values()
-          .find(c => c.toasts.get(toastId) && c.isPaused());
+        const someElementsPaused = Array.from(getContainers().values()).find(
+          c => c.toasts.get(toastId) && c.isPaused()
+        );
 
         if (!someElementsPaused) playToast();
 

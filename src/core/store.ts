@@ -32,6 +32,7 @@ interface RemoveParams {
 
 export const containers = new Map<Id, ContainerObserver>();
 export let renderQueue: EnqueuedToast[] = [];
+export const getContainers = () => containers;
 
 const listeners = new Set<OnChangeCallback>();
 
@@ -92,7 +93,7 @@ export function removeToast(params?: Id | RemoveParams) {
 
 export function clearWaitingQueue(p: ClearWaitingQueueParams = {}) {
   containers.forEach(c => {
-    if (c.props.limit && (!p.containerId || c.id === p.containerId)) {
+    if (c.getProps().limit && (!p.containerId || c.id === p.containerId)) {
       c.clearQueue();
     }
   });

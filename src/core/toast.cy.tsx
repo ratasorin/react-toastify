@@ -177,12 +177,12 @@ describe('with container', () => {
     });
 
     it('update the toastId', () => {
-      const id = toast('msg');
+      const id = toast('msg-v2');
       const nextId = 123;
 
       cy.resolveEntranceAnimation();
 
-      cy.findByText('msg')
+      cy.findByText('msg-v2')
         .should('exist')
         .then(() => {
           expect(toast.isActive(id)).to.be.true;
@@ -274,6 +274,9 @@ describe('with container', () => {
     cy.wait(2000);
     cy.findByText('loading').should('not.exist');
     cy.findByText('oops').should('exist');
+
+    toast.dismiss();
+    cy.resolveEntranceAnimation();
   });
 
   it('handle resolved promise', () => {
@@ -300,6 +303,9 @@ describe('with container', () => {
     cy.wait(2000);
     cy.findByText('loading').should('not.exist');
     cy.findByText('it worked').should('exist');
+
+    toast.dismiss();
+    cy.resolveEntranceAnimation();
   });
 
   it('support onOpen and onClose callback', () => {
@@ -460,6 +466,12 @@ describe('with multi containers', () => {
   });
 
   it('clear waiting queue for a given container', () => {
+    toast.dismiss({ containerId: Containers.First });
+    toast.dismiss({ containerId: Containers.Second });
+    toast.dismiss({ containerId: Containers.Third });
+
+    cy.resolveEntranceAnimation();
+
     toast('msg1-c1', {
       containerId: Containers.First
     });

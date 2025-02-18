@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { ToastContainer, toast } from 'react-toastify';
 import {
   NotificationCenterItem,
@@ -82,7 +81,7 @@ function TestComponent(props: UseNotificationCenterParams) {
           </li>
         ))}
       </ul>
-      <ToastContainer />
+      <ToastContainer position="bottom-right" />
     </div>
   );
 }
@@ -90,6 +89,7 @@ function TestComponent(props: UseNotificationCenterParams) {
 describe('NotificationCenter', () => {
   beforeEach(() => {
     cy.mount(<TestComponent />);
+    toast.dismiss(); // clear all previous toasts!
   });
 
   it('listen for new notifications', () => {
