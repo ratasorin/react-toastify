@@ -692,6 +692,7 @@ describe('with stacked container', () => {
     toast('hello 1');
     toast('hello 2');
     toast('hello 3');
+    cy.resolveEntranceAnimation();
 
     cy.findByText('hello 1').should('exist').and('not.be.visible');
     cy.findByText('hello 2').should('exist').and('not.be.visible');
@@ -705,6 +706,10 @@ describe('with stacked container', () => {
     toast('hello D');
 
     cy.resolveEntranceAnimation();
+
+    cy.get('body').then($body => {
+      console.log('Body contents:', $body.html());
+    });
 
     cy.findByText('hello A').should('exist').and('not.be.visible');
     cy.findByText('hello B').should('exist').and('not.be.visible');

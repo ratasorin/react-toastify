@@ -11,7 +11,6 @@ import {
 } from '../types';
 import { Default, canBeRendered, isId } from '../utils';
 import { ContainerObserver, createContainerObserver } from './containerObserver';
-import { toast } from './toast';
 
 interface EnqueuedToast {
   content: ToastContent<any>;
@@ -33,11 +32,6 @@ const listeners = new Set<OnChangeCallback>();
 const dispatchChanges = (data: ToastItem) => listeners.forEach(cb => cb(data));
 
 const hasContainers = () => containers.size > 0;
-
-function flushRenderQueue() {
-  renderQueue.forEach(v => pushToast(v.content, v.options));
-  renderQueue.length = 0;
-}
 
 export const getToast = (id: Id, { containerId }: ToastOptions) => {
   const foundToast = containers.get(containerId || Default.CONTAINER_ID)?.toasts.get(id);
@@ -62,6 +56,7 @@ export function isToastActive(id: Id, containerId?: Id) {
 }
 
 export function removeToast(params?: Id | RemoveParams) {
+  console.log('REMOVEEEEE');
   if (!hasContainers()) {
     renderQueue = renderQueue.filter(v => params != null && v.options.toastId !== params);
     return;
@@ -98,8 +93,10 @@ const handleStackedLayout = (container: ContainerObserver) => {
   if (!isProcessingQueue) {
     isProcessingQueue = true;
 
+    console.log('IS PROCESSING!!!!', { renderQueue: [...renderQueue] });
     const intervalId = setInterval(() => {
       if (renderQueue.length === 0) {
+        console.log('STOOOOOP!');
         // Stop processing if the queue is empty
         clearInterval(intervalId);
         isProcessingQueue = false;
@@ -129,7 +126,7 @@ const handleStackedLayout = (container: ContainerObserver) => {
           if (container.isPaused()) {
             // delay 1 cycle to make sure components were mounted
             setTimeout(() => {
-              toast.pause({ id: newToast?.props.toastId });
+              toggleToast(false, { id: newToast?.props.toastId });
             }, 0);
           }
         });
@@ -160,7 +157,7 @@ const handleStackedLayout = (container: ContainerObserver) => {
       if (container.isPaused()) {
         // delay 1 cycle to make sure components were mounted
         setTimeout(() => {
-          toast.pause({ id: newToast?.props.toastId });
+          toggleToast(false, { id: newToast?.props.toastId });
         }, 0);
       }
     }, interval);
@@ -217,7 +214,8 @@ export function registerContainer(props: ToastContainerProps) {
 
       containers.set(id, container);
       const unobserve = container.observe(notify);
-      flushRenderQueue();
+
+      renderQueue.forEach(v => pushToast(v.content, v.options));
 
       return () => {
         unobserve();

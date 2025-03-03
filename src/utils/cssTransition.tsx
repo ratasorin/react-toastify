@@ -72,11 +72,7 @@ export function cssTransition({
     playToast,
     toastId
   }: ToastTransitionProps) {
-    const enterClassName = disableEnterAnimation
-      ? null
-      : appendPosition
-        ? `${enter}--${position}`
-        : enter;
+    const enterClassName = disableEnterAnimation ? null : appendPosition ? `${enter}--${position}` : enter;
     const exitClassName = appendPosition ? `${exit}--${position}` : exit;
     const animationStep = useRef(AnimationStep.Enter);
 

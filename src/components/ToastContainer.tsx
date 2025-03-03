@@ -112,6 +112,7 @@ export function ToastContainer(props: ToastContainerProps) {
 
   const displayToastInStackedMode = useCallback(
     (index: number) => {
+      console.log('HERE');
       if (collapsed) {
         if (stacked) {
           if (!props.stackLimit) return 'visible';
@@ -154,6 +155,7 @@ export function ToastContainer(props: ToastContainerProps) {
             key={`c-${position}`}
           >
             {toastList.map(({ content, props: toastProps }, index) => {
+              console.log({ toastList });
               return (
                 <Toast
                   {...toastProps}

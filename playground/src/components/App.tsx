@@ -13,7 +13,7 @@ import { ToastCode, ToastCodeProps } from './ToastCode';
 import { flags, positions, themes, transitions, types } from './constants';
 
 import { ChangeEvent, useCallback, useState } from 'react';
-import '../../../scss/main.scss';
+import '../../../src/style.css';
 import { Id, ToastContainer, ToastContainerProps, ToastOptions, toast } from '../../../src/index';
 import { defaultProps } from '../../../src/components/ToastContainer';
 
