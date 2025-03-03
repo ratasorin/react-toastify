@@ -551,7 +551,7 @@ describe('with multi containers', () => {
 
 describe('with stacked container', () => {
   beforeEach(() => {
-    cy.mount(<ToastContainer autoClose={false} stacked />);
+    cy.mount(<ToastContainer autoClose={false} stacked stackLimit={3} />);
   });
 
   it('render toasts', () => {
@@ -562,5 +562,30 @@ describe('with stacked container', () => {
     cy.findByText('hello 1').should('exist').and('not.be.visible');
     cy.findByText('hello 2').should('exist').and('not.be.visible');
     cy.findByText('hello 3').should('exist').and('be.visible');
+  });
+
+  it.only('respects stackLimit prop', () => {
+    toast('hello A');
+    toast('hello B');
+    toast('hello C');
+    toast('hello D');
+
+    cy.resolveEntranceAnimation();
+
+    cy.findByText('hello A').should('exist').and('not.be.visible');
+    cy.findByText('hello B').should('exist').and('not.be.visible');
+    cy.findByText('hello C').should('exist').and('not.be.visible');
+    cy.findByText('hello D').should('exist').and('be.visible');
+
+    cy.get(`#1`).should('have.css', 'visibility', 'hidden');
+
+    cy.findByText('hello D').trigger('mouseover');
+
+    cy.findByText('hello A').should('exist').and('be.visible');
+    cy.findByText('hello B').should('exist').and('be.visible');
+    cy.findByText('hello C').should('exist').and('be.visible');
+    cy.findByText('hello D').should('exist').and('be.visible');
+
+    cy.get('#1').should('have.css', 'visibility', 'visible');
   });
 });
