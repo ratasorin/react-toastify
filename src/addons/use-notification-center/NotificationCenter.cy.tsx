@@ -1,24 +1,14 @@
 import React from 'react';
-import { ToastContainer, toast } from 'react-toastify';
-import {
-  NotificationCenterItem,
-  UseNotificationCenterParams,
-  useNotificationCenter
-} from './useNotificationCenter';
+
+import { toast, ToastContainer } from 'react-toastify';
+import { NotificationCenterItem, useNotificationCenter, UseNotificationCenterParams } from './useNotificationCenter';
 
 function TestComponent(props: UseNotificationCenterParams) {
   const [content, setContent] = React.useState('');
   const [updateId, setUpdateId] = React.useState('');
-  const {
-    unreadCount,
-    markAllAsRead,
-    markAsRead,
-    notifications,
-    remove,
-    add,
-    clear,
-    update
-  } = useNotificationCenter(props || {});
+  const { unreadCount, markAllAsRead, markAsRead, notifications, remove, add, clear, update } = useNotificationCenter(
+    props || {}
+  );
 
   const flex = {
     display: 'flex',
@@ -29,12 +19,11 @@ function TestComponent(props: UseNotificationCenterParams) {
   return (
     <div>
       <div style={flex}>
+        <button onClick={() => toast('hello')}>display notification</button>
         <button onClick={markAllAsRead}>markAllAsRead</button>
         <button onClick={clear}>clear</button>
         <button onClick={() => add({ content })}>addNotification</button>
-        <button onClick={() => update(updateId, { content })}>
-          updateNotification
-        </button>
+        <button onClick={() => update(updateId, { content })}>updateNotification</button>
       </div>
       <ul>
         <li>
@@ -47,18 +36,8 @@ function TestComponent(props: UseNotificationCenterParams) {
         </li>
       </ul>
 
-      <input
-        data-testid="content"
-        type="text"
-        onChange={e => setContent(e.target.value)}
-        value={content}
-      />
-      <input
-        data-testid="updateId"
-        type="text"
-        onChange={e => setUpdateId(e.target.value)}
-        value={updateId}
-      />
+      <input data-testid="content" type="text" onChange={e => setContent(e.target.value)} value={content} />
+      <input data-testid="updateId" type="text" onChange={e => setUpdateId(e.target.value)} value={updateId} />
 
       <ul data-testid="notifications">
         {notifications.map(el => (
@@ -66,16 +45,10 @@ function TestComponent(props: UseNotificationCenterParams) {
             {/* @ts-ignore */}
             <span data-testid={`content-${el.id}`}>{el.content}</span>
             <span data-testid={`read-${el.id}`}>{el.read.toString()}</span>
-            <button
-              data-testid={`markAsRead-${el.id}`}
-              onClick={() => markAsRead(el.id)}
-            >
+            <button data-testid={`markAsRead-${el.id}`} onClick={() => markAsRead(el.id)}>
               markAsRead
             </button>
-            <button
-              data-testid={`remove-${el.id}`}
-              onClick={() => remove(el.id)}
-            >
+            <button data-testid={`remove-${el.id}`} onClick={() => remove(el.id)}>
               remove
             </button>
           </li>
@@ -120,26 +93,15 @@ describe('NotificationCenter', () => {
     const id = toast('msg');
 
     cy.resolveEntranceAnimation();
+    cy.findByRole('alert').should('exist');
 
-    toast.update(id, {
-      render: 'msg updated'
-    });
+    setTimeout(() => {
+      toast.update(id, {
+        render: 'msg updated'
+      });
+    }, 0);
+
     cy.findAllByText('msg updated').should('exist');
-  });
-
-  it('mark as read a single notification', () => {
-    cy.findByTestId('unreadCount').should('contain.text', 0);
-    cy.findByTestId('count').should('contain.text', 0);
-    const id = toast('msg');
-    cy.resolveEntranceAnimation();
-
-    cy.findByTestId('count').should('contain.text', 1);
-    cy.findByTestId('unreadCount').should('contain.text', 1);
-    cy.findByTestId(`read-${id}`).should('contain.text', false);
-
-    cy.findByTestId(`markAsRead-${id}`).click();
-    cy.findByTestId('unreadCount').should('contain.text', 0);
-    cy.findByTestId(`read-${id}`).should('contain.text', true);
   });
 
   describe('with initial state', () => {

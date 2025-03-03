@@ -1,4 +1,5 @@
-export { useToastContainer, useToast } from './hooks';
+import './style.css';
+
 export { cssTransition, collapseToast } from './utils';
 export { ToastContainer, Bounce, Flip, Slide, Zoom, Icons } from './components';
 export type { IconProps, CloseButton } from './components';
@@ -19,5 +20,9 @@ export type {
   ToastContainerProps,
   ToastTransitionProps,
   Id,
-  ToastItem
+  ToastItem,
+  ClearWaitingQueueFunc,
+  OnChangeCallback,
+  ToastIcon
 } from './types';
+export type { CloseButtonProps } from './components/CloseButton';

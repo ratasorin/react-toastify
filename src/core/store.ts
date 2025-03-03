@@ -1,4 +1,5 @@
 import {
+  ClearWaitingQueueParams,
   Id,
   NotValidatedToastProps,
   OnChangeCallback,
@@ -9,20 +10,13 @@ import {
   ToastOptions
 } from '../types';
 import { Default, canBeRendered, isId } from '../utils';
-import {
-  ContainerObserver,
-  createContainerObserver
-} from './containerObserver';
+import { ContainerObserver, createContainerObserver } from './containerObserver';
 import { toast } from './toast';
 
 interface EnqueuedToast {
   content: ToastContent<any>;
   options: NotValidatedToastProps;
-  toggle?: (play: boolean) => any;
-}
-
-interface ClearWaitingQueueParams {
-  containerId?: Id;
+  toggle: (play: boolean) => void;
 }
 
 interface RemoveParams {
@@ -46,9 +40,7 @@ function flushRenderQueue() {
 }
 
 export const getToast = (id: Id, { containerId }: ToastOptions) => {
-  const foundToast = containers
-    .get(containerId || Default.CONTAINER_ID)
-    ?.toasts.get(id);
+  const foundToast = containers.get(containerId || Default.CONTAINER_ID)?.toasts.get(id);
   const enqueuedToast = renderQueue.find(t => t.options.toastId == id);
 
   return {
@@ -71,9 +63,7 @@ export function isToastActive(id: Id, containerId?: Id) {
 
 export function removeToast(params?: Id | RemoveParams) {
   if (!hasContainers()) {
-    renderQueue = renderQueue.filter(
-      v => params != null && v.options.toastId !== params
-    );
+    renderQueue = renderQueue.filter(v => params != null && v.options.toastId !== params);
     return;
   }
 
@@ -91,13 +81,13 @@ export function removeToast(params?: Id | RemoveParams) {
   }
 }
 
-export function clearWaitingQueue(p: ClearWaitingQueueParams = {}) {
+export const clearWaitingQueue = (p: ClearWaitingQueueParams = {}) => {
   containers.forEach(c => {
     if (c.getProps().limit && (!p.containerId || c.id === p.containerId)) {
       c.clearQueue();
     }
   });
-}
+};
 
 let isProcessingQueue = false;
 const interval = 600,
@@ -206,9 +196,7 @@ type RegisterToggleOpts = {
 };
 
 export function registerToggle(opts: RegisterToggleOpts) {
-  containers
-    .get(opts.containerId || Default.CONTAINER_ID)
-    ?.setToggle(opts.id, opts.fn);
+  containers.get(opts.containerId || Default.CONTAINER_ID)?.setToggle(opts.id, opts.fn);
 }
 
 export function toggleToast(v: boolean, opt?: ToggleToastParams) {

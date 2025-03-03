@@ -3,23 +3,16 @@ import { isToastActive, registerContainer } from '../core/store';
 import { Toast, ToastContainerProps, ToastPosition } from '../types';
 
 export function useToastContainer(props: ToastContainerProps) {
-  const { subscribe, getSnapshot, setProps } = useRef(
-    registerContainer(props)
-  ).current;
-  console.log({ props });
+  const { subscribe, getSnapshot, setProps } = useRef(registerContainer(props)).current;
   setProps(props);
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)?.slice();
 
-  function getToastToRender<T>(
-    cb: (position: ToastPosition, toastList: Toast[]) => T
-  ) {
+  function getToastToRender<T>(cb: (position: ToastPosition, toastList: Toast[]) => T) {
     if (!snapshot) return [];
 
     const toRender = new Map<ToastPosition, Toast[]>();
 
-    if (props.newestOnTop) {
-      snapshot.reverse();
-    }
+    if (props.newestOnTop) snapshot.reverse();
 
     snapshot.forEach(toast => {
       const { position } = toast.props;

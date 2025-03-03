@@ -27,9 +27,7 @@ const cssClasses = {
 const progressBar = {
   isRunning: () => {
     cy.wait(100);
-    cy.findByRole('progressbar')
-      .should('have.attr', 'style')
-      .and('include', 'animation-play-state: running');
+    cy.findByRole('progressbar').should('have.attr', 'style').and('include', 'animation-play-state: running');
   },
   isPaused: () => {
     cy.wait(100);
@@ -41,38 +39,29 @@ const progressBar = {
   isControlled: (progress: number) => {
     cy.wait(100);
     cy.get(cssClasses.progressBarController).should('exist');
-    cy.findByRole('progressbar')
-      .should('have.attr', 'style')
-      .and('include', `scaleX(${progress})`);
+    cy.findByRole('progressbar').should('have.attr', 'style').and('include', `scaleX(${progress})`);
   }
 };
 
 describe('Toast', () => {
-  for (const { name, className, bodyClassName } of [
+  for (const { name, className } of [
     {
       name: 'string',
-      className: 'container-class',
-      bodyClassName: 'body-class'
+      className: 'container-class'
     },
     {
       name: 'function',
-      className: () => 'container-class',
-      bodyClassName: () => 'body-class'
+      className: () => 'container-class'
     }
   ]) {
-    it(`merge container and body className when using ${name}`, () => {
+    it(`merge container when using ${name}`, () => {
       cy.mount(
-        <Toast
-          {...REQUIRED_PROPS}
-          className={className}
-          bodyClassName={bodyClassName}
-        >
+        <Toast {...REQUIRED_PROPS} className={className}>
           FooBar
         </Toast>
       );
 
       cy.get('.container-class').should('exist');
-      cy.get('.body-class').should('exist');
     });
   }
 
@@ -236,18 +225,9 @@ describe('Toast', () => {
     const style: React.CSSProperties = {
       background: 'purple'
     };
-    const bodyStyle: React.CSSProperties = {
-      fontWeight: 'bold'
-    };
 
     cy.mount(
-      <Toast
-        {...REQUIRED_PROPS}
-        role="status"
-        toastId="foo"
-        style={style}
-        bodyStyle={bodyStyle}
-      >
+      <Toast {...REQUIRED_PROPS} role="status" toastId="foo" style={style}>
         hello
       </Toast>
     );
@@ -257,13 +237,7 @@ describe('Toast', () => {
     cy.findByRole('status').should('exist');
     cy.get('#foo').should('exist');
 
-    cy.findByRole('status')
-      .parent()
-      .should('have.attr', 'style')
-      .and('include', 'background: purple');
-    cy.findByRole('status')
-      .should('have.attr', 'style')
-      .and('include', 'font-weight: bold');
+    cy.findByRole('status').should('have.attr', 'style').and('include', 'background: purple');
   });
 
   for (const { type, value } of [
@@ -274,6 +248,10 @@ describe('Toast', () => {
     {
       type: 'react element',
       value: <div>hello</div>
+    },
+    {
+      type: 'function',
+      value: () => <div>hello</div>
     }
   ]) {
     it(`render ${type}`, () => {

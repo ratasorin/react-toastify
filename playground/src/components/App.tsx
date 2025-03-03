@@ -14,13 +14,7 @@ import { flags, positions, themes, transitions, types } from './constants';
 
 import { ChangeEvent, useCallback, useState } from 'react';
 import '../../../scss/main.scss';
-import {
-  Id,
-  ToastContainer,
-  ToastContainerProps,
-  ToastOptions,
-  toast
-} from '../../../src/index';
+import { Id, ToastContainer, ToastContainerProps, ToastOptions, toast } from '../../../src/index';
 import { defaultProps } from '../../../src/components/ToastContainer';
 
 // Attach to window. Can be useful to debug
@@ -31,7 +25,7 @@ const appDefaultState = {
   ...defaultProps,
   transitionType: 'bounce',
   type: 'default',
-  progress: '',
+  progress: 0,
   disableAutoClose: false,
   autoClose: 5000,
   theme: 'light',
@@ -87,10 +81,7 @@ const App = () => {
     );
   }, [resolvePromise, setResolvePromise]);
 
-  const updateToast = useCallback(
-    () => toast.update(toastId, { progress: state.progress }),
-    [toastId, state]
-  );
+  const updateToast = useCallback(() => toast.update(toastId, { progress: state.progress }), [toastId, state]);
 
   const handleAutoCloseDelay = useCallback(
     (event: any) =>
@@ -132,10 +123,7 @@ const App = () => {
     (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setState(state => ({
         ...state,
-        [event.target.name]:
-          event.target.name === 'limit'
-            ? parseInt(event.target.value, 10)
-            : event.target.value
+        [event.target.name]: event.target.name === 'limit' ? parseInt(event.target.value, 10) : event.target.value
       })),
     [setState]
   );
@@ -152,12 +140,7 @@ const App = () => {
   const renderFlags = useCallback(() => {
     return flags.map(({ id, label }) => (
       <li key={id}>
-        <Checkbox
-          id={id}
-          label={label}
-          onChange={toggleCheckbox}
-          checked={state[id]}
-        />
+        <Checkbox id={id} label={label} onChange={toggleCheckbox} checked={state[id]} />
       </li>
     ));
   }, [state]);
@@ -167,10 +150,9 @@ const App = () => {
       <Header />
       <div className="container">
         <p>
-          By default, all toasts will inherit ToastContainer's props. Props
-          defined on toast supersede ToastContainer's props. Props marked with *
-          can only be set on the ToastContainer. The demo is not exhaustive,
-          check the repo for more!
+          By default, all toasts will inherit ToastContainer's props. Props defined on toast supersede ToastContainer's
+          props. Props marked with * can only be set on the ToastContainer. The demo is not exhaustive, check the repo
+          for more!
         </p>
         <section className="container__options">
           <div>
@@ -187,12 +169,7 @@ const App = () => {
           <div>
             <h3>Type</h3>
             <ul>
-              <Radio
-                options={types}
-                name="type"
-                checked={state.type}
-                onChange={handleRadioOrSelect}
-              />
+              <Radio options={types} name="type" checked={state.type} onChange={handleRadioOrSelect} />
             </ul>
           </div>
           <div>
@@ -239,12 +216,7 @@ const App = () => {
               </label>
               <label htmlFor="theme">
                 Theme
-                <select
-                  name="theme"
-                  id="theme"
-                  onChange={handleRadioOrSelect}
-                  value={state.theme}
-                >
+                <select name="theme" id="theme" onChange={handleRadioOrSelect} value={state.theme}>
                   {themes.map(k => (
                     <option key={k} value={k}>
                       {k}
@@ -264,23 +236,14 @@ const App = () => {
               </label>
               <label htmlFor="limit">
                 Limit
-                <input
-                  type="number"
-                  name="limit"
-                  id="limit"
-                  value={state.limit}
-                  onChange={handleRadioOrSelect}
-                />
+                <input type="number" name="limit" id="limit" value={state.limit} onChange={handleRadioOrSelect} />
               </label>
             </div>
             <ul>{renderFlags()}</ul>
           </div>
         </section>
         <section>
-          <ContainerCode
-            {...(state as unknown as ContainerCodeProps)}
-            isDefaultProps={isDefaultProps() as boolean}
-          />
+          <ContainerCode {...(state as unknown as ContainerCodeProps)} isDefaultProps={isDefaultProps() as boolean} />
           <ToastCode {...(state as unknown as ToastCodeProps)} />
         </section>
         <div className="cta__wrapper">

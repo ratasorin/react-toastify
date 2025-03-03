@@ -1,8 +1,8 @@
 import cx from 'clsx';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 
 import { toast } from '../core';
-import { useToastContainer } from '../hooks/useToastContainer';
+import { useToastContainer } from '../hooks';
 import { useIsomorphicLayoutEffect } from '../hooks/useIsomorphicLayoutEffect';
 import { ToastContainerProps, ToastPosition } from '../types';
 import { Default, Direction, isFn, parseClassName } from '../utils';
@@ -20,7 +20,9 @@ export const defaultProps: ToastContainerProps = {
   draggablePercent: Default.DRAGGABLE_PERCENT as number,
   draggableDirection: Direction.X,
   role: 'alert',
-  theme: 'light'
+  theme: 'light',
+  'aria-label': 'Notifications Alt+T',
+  hotKeys: e => e.altKey && e.code === 'KeyT'
 };
 
 export function ToastContainer(props: ToastContainerProps) {
@@ -32,9 +34,8 @@ export function ToastContainer(props: ToastContainerProps) {
   const stacked = props.stacked;
   const [collapsed, setIsCollapsed] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { getToastToRender, isToastActive, count } =
-    useToastContainer(containerProps);
-  const { className, style, rtl, containerId } = containerProps;
+  const { getToastToRender, isToastActive, count } = useToastContainer(containerProps);
+  const { className, style, rtl, containerId, hotKeys } = containerProps;
 
   function getClassName(position: ToastPosition) {
     const defaultClassName = cx(
@@ -76,8 +77,7 @@ export function ToastContainer(props: ToastContainerProps) {
 
           if (!node.dataset.pos) node.dataset.pos = isTop ? 'top' : 'bot';
 
-          const y =
-            usedHeight * (collapsed ? 0.2 : 1) + (collapsed ? 0 : gap * i);
+          const y = usedHeight * (collapsed ? 0.2 : 1) + (collapsed ? 0 : gap * i);
 
           node.style.setProperty('--y', `${isTop ? y : y * -1}px`);
           node.style.setProperty('--g', `${gap}`);
@@ -88,6 +88,27 @@ export function ToastContainer(props: ToastContainerProps) {
         });
     }
   }, [collapsed, count, stacked]);
+
+  useEffect(() => {
+    function focusFirst(e: KeyboardEvent) {
+      const node = containerRef.current;
+      if (hotKeys(e)) {
+        (node.querySelector('[tabIndex="0"]') as HTMLElement)?.focus();
+        setIsCollapsed(false);
+        toast.pause();
+      }
+      if (e.key === 'Escape' && (document.activeElement === node || node?.contains(document.activeElement))) {
+        setIsCollapsed(true);
+        toast.play();
+      }
+    }
+
+    document.addEventListener('keydown', focusFirst);
+
+    return () => {
+      document.removeEventListener('keydown', focusFirst);
+    };
+  }, [hotKeys]);
 
   const displayToastInStackedMode = useCallback(
     (index: number) => {
@@ -103,7 +124,7 @@ export function ToastContainer(props: ToastContainerProps) {
   );
 
   return (
-    <div
+    <section
       ref={containerRef}
       className={Default.CSS_NAMESPACE as string}
       id={containerId as string}
@@ -114,6 +135,10 @@ export function ToastContainer(props: ToastContainerProps) {
         }
       }}
       onMouseLeave={collapseAll}
+      aria-live="polite"
+      aria-atomic="false"
+      aria-relevant="additions text"
+      aria-label={containerProps['aria-label']}
     >
       {getToastToRender((position, toastList) => {
         const containerStyle: React.CSSProperties = !toastList.length
@@ -122,9 +147,11 @@ export function ToastContainer(props: ToastContainerProps) {
 
         return (
           <div
+            tabIndex={-1}
             className={getClassName(position)}
+            data-stacked={stacked}
             style={containerStyle}
-            key={`container-${position}`}
+            key={`c-${position}`}
           >
             {toastList.map(({ content, props: toastProps }, index) => {
               return (
@@ -132,15 +159,10 @@ export function ToastContainer(props: ToastContainerProps) {
                   {...toastProps}
                   stacked={stacked}
                   collapseAll={collapseAll}
-                  isIn={isToastActive(
-                    toastProps.toastId,
-                    toastProps.containerId
-                  )}
+                  isIn={isToastActive(toastProps.toastId, toastProps.containerId)}
                   style={{
                     ...toastProps.style,
-                    visibility: displayToastInStackedMode(
-                      toastList.length - index
-                    )
+                    visibility: displayToastInStackedMode(toastList.length - index)
                   }}
                   key={`toast-${toastProps.key}`}
                 >
@@ -151,6 +173,6 @@ export function ToastContainer(props: ToastContainerProps) {
           </div>
         );
       })}
-    </div>
+    </section>
   );
 }

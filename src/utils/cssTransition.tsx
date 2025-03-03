@@ -100,10 +100,7 @@ export function cssTransition({
 
         node.removeEventListener('animationend', onEntered);
         node.removeEventListener('animationcancel', onEntered);
-        if (
-          animationStep.current === AnimationStep.Enter &&
-          e.type !== 'animationcancel'
-        ) {
+        if (animationStep.current === AnimationStep.Enter && e.type !== 'animationcancel') {
           node.classList.remove(...classToToken);
         }
       };

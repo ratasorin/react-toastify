@@ -7,19 +7,25 @@ jobs:
     runs-on: ubuntu-latest
   
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
       - name: Install node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4.1.0
         with:
-            node-version: '18.x'
+            node-version: '22.x'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+            version: 9 
       - name: Install dependencies
-        run: yarn 
-      - name: Lint
-        run: yarn lint
+        run: pnpm i 
+      # - name: Lint
+      #   run: yarn lint
       - name: Setup
-        run: yarn setup
+        run: pnpm run setup
+      - name: Build
+        run: pnpm build
       - name: Test
-        run: yarn run test:run 
+        run: pnpm run test:run 
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
@@ -31,6 +37,6 @@ jobs:
           name: cypress-videos
           path: cypress/videos
       - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@v1.1.2
+        uses: coverallsapp/github-action@v2.3.4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

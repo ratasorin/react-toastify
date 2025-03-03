@@ -1,22 +1,15 @@
 import cx from 'clsx';
-import React, { cloneElement, isValidElement, ReactNode } from 'react';
+import React, { cloneElement, isValidElement } from 'react';
 
 import { useToast } from '../hooks/useToast';
 import { ToastProps } from '../types';
-import { Default, isFn } from '../utils';
+import { Default, isFn, renderContent } from '../utils';
 import { CloseButton } from './CloseButton';
 import { ProgressBar } from './ProgressBar';
 import { getIcon } from './Icons';
 
 export const Toast: React.FC<ToastProps> = props => {
-  const {
-    isRunning,
-    preventExitTransition,
-    toastRef,
-    eventHandlers,
-    playToast,
-    pauseToast
-  } = useToast(props);
+  const { isRunning, preventExitTransition, toastRef, eventHandlers, playToast, pauseToast } = useToast(props);
   const {
     stacked,
     closeButton,
@@ -31,10 +24,7 @@ export const Toast: React.FC<ToastProps> = props => {
     position,
     className,
     style,
-    bodyClassName,
-    bodyStyle,
     progressClassName,
-    progressStyle,
     updateId,
     role,
     progress,
@@ -44,7 +34,8 @@ export const Toast: React.FC<ToastProps> = props => {
     isIn,
     isLoading,
     closeOnClick,
-    theme
+    theme,
+    ariaLabel
   } = props;
   const defaultClassName = cx(
     `${Default.CSS_NAMESPACE}__toast`,
@@ -99,52 +90,42 @@ export const Toast: React.FC<ToastProps> = props => {
     >
       <div
         id={toastId as string}
+        tabIndex={0}
         onClick={onClick}
         data-in={isIn}
         className={cssClasses}
         {...eventHandlers}
         style={style}
         ref={toastRef}
+        {...(isIn && { role: role, 'aria-label': ariaLabel })}
       >
-        <div
-          {...(isIn && { role: role })}
-          className={
-            isFn(bodyClassName)
-              ? bodyClassName({ type })
-              : cx(`${Default.CSS_NAMESPACE}__toast-body`, bodyClassName)
-          }
-          style={bodyStyle}
-        >
-          {icon != null && (
-            <div
-              className={cx(`${Default.CSS_NAMESPACE}__toast-icon`, {
-                [`${Default.CSS_NAMESPACE}--animate-icon ${Default.CSS_NAMESPACE}__zoom-enter`]:
-                  !isLoading
-              })}
-            >
-              {icon}
-            </div>
-          )}
-          <div>{children as ReactNode}</div>
-        </div>
+        {icon != null && (
+          <div
+            className={cx(`${Default.CSS_NAMESPACE}__toast-icon`, {
+              [`${Default.CSS_NAMESPACE}--animate-icon ${Default.CSS_NAMESPACE}__zoom-enter`]: !isLoading
+            })}
+          >
+            {icon}
+          </div>
+        )}
+        {renderContent(children, props, !isRunning)}
         {Close}
-        <ProgressBar
-          {...(updateId && !isProgressControlled
-            ? { key: `pb-${updateId}` }
-            : {})}
-          rtl={rtl}
-          theme={theme}
-          delay={autoClose as number}
-          isRunning={isRunning}
-          isIn={isIn}
-          closeToast={closeToast}
-          hide={hideProgressBar}
-          type={type}
-          style={progressStyle}
-          className={progressClassName}
-          controlledProgress={isProgressControlled}
-          progress={progress || 0}
-        />
+        {!props.customProgressBar && (
+          <ProgressBar
+            {...(updateId && !isProgressControlled ? { key: `p-${updateId}` } : {})}
+            rtl={rtl}
+            theme={theme}
+            delay={autoClose as number}
+            isRunning={isRunning}
+            isIn={isIn}
+            closeToast={closeToast}
+            hide={hideProgressBar}
+            type={type}
+            className={progressClassName}
+            controlledProgress={isProgressControlled}
+            progress={progress || 0}
+          />
+        )}
       </div>
     </Transition>
   );

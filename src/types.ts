@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { HTMLAttributes } from 'react';
 import { CloseButtonProps, IconProps } from './components';
+import { clearWaitingQueue } from './core/store';
 
 type Nullable<T> = {
   [P in keyof T]: T[P] | null;
@@ -9,34 +10,24 @@ export type TypeOptions = 'info' | 'success' | 'warning' | 'error' | 'default';
 
 export type Theme = 'light' | 'dark' | 'colored' | (string & {});
 
-export type ToastPosition =
-  | 'top-right'
-  | 'top-center'
-  | 'top-left'
-  | 'bottom-right'
-  | 'bottom-center'
-  | 'bottom-left';
+export type ToastPosition = 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left';
+
+export type CloseToastFunc = ((reason?: boolean | string) => void) & ((e: React.MouseEvent) => void);
 
 export interface ToastContentProps<Data = unknown> {
-  closeToast: () => void;
+  closeToast: CloseToastFunc;
   toastProps: ToastProps;
+  isPaused: boolean;
   data: Data;
 }
 
-export type ToastContent<T = unknown> =
-  | React.ReactNode
-  | ((props: ToastContentProps<T>) => React.ReactNode);
+export type ToastContent<T = unknown> = React.ReactNode | ((props: ToastContentProps<T>) => React.ReactNode);
 
-export type ToastIcon =
-  | false
-  | ((props: IconProps) => React.ReactNode)
-  | React.ReactElement<IconProps>;
+export type ToastIcon = false | ((props: IconProps) => React.ReactNode) | React.ReactElement<IconProps>;
 
 export type Id = number | string;
 
-export type ToastTransition =
-  | React.FC<ToastTransitionProps>
-  | React.ComponentClass<ToastTransitionProps>;
+export type ToastTransition = React.FC<ToastTransitionProps> | React.ComponentClass<ToastTransitionProps>;
 
 /**
  * ClassName for the elements - can take a function to build a classname or a raw string that is cx'ed to defaults
@@ -94,30 +85,12 @@ interface CommonOptions {
    * Pass a custom close button.
    * To remove the close button pass `false`
    */
-  closeButton?:
-    | boolean
-    | ((props: CloseButtonProps) => React.ReactNode)
-    | React.ReactElement<CloseButtonProps>;
+  closeButton?: boolean | ((props: CloseButtonProps) => React.ReactNode) | React.ReactElement<CloseButtonProps>;
 
   /**
    * An optional css class to set for the progress bar.
    */
   progressClassName?: ToastClassName;
-
-  /**
-   * An optional style to set for the progress bar.
-   */
-  progressStyle?: React.CSSProperties;
-
-  /**
-   * An optional css class to set for the toast content.
-   */
-  bodyClassName?: ToastClassName;
-
-  /**
-   * An optional inline style to apply for the toast content.
-   */
-  bodyStyle?: React.CSSProperties;
 
   /**
    * Hide or show the progress bar.
@@ -184,6 +157,14 @@ interface CommonOptions {
    * `Default: 'light'`
    */
   theme?: Theme;
+
+  /**
+   * When set to `true` the built-in progress bar won't be rendered at all. Autoclose delay won't have any effect as well
+   * This is only used when you want to replace the progress bar with your own.
+   *
+   * See https://stackblitz.com/edit/react-toastify-custom-progress-bar?file=src%2FApp.tsx for an example.
+   */
+  customProgressBar?: boolean;
 }
 
 export interface ToastOptions<Data = unknown> extends CommonOptions {
@@ -195,12 +176,14 @@ export interface ToastOptions<Data = unknown> extends CommonOptions {
   /**
    * Called when toast is mounted.
    */
-  onOpen?: <T = {}>(props: T) => void;
+  onOpen?: () => void;
 
   /**
    * Called when toast is unmounted.
+   * The callback first argument is the closure reason.
+   * It is "true" when the notification is closed by a user action like clicking on the close button.
    */
-  onClose?: <T = {}>(props: T) => void;
+  onClose?: (reason?: boolean | string) => void;
 
   /**
    * An optional inline style to apply.
@@ -226,7 +209,17 @@ export interface ToastOptions<Data = unknown> extends CommonOptions {
   /**
    * Set the percentage for the controlled progress bar. `Value must be between 0 and 1.`
    */
-  progress?: number | string;
+  progress?: number;
+
+  /**
+   * Let you provide any data, useful when you are using your own component
+   */
+  data?: Data;
+
+  /**
+   * Let you specify the aria-label
+   */
+  ariaLabel?: string;
 
   /**
    * Add a delay in ms before the toast appear.
@@ -234,8 +227,6 @@ export interface ToastOptions<Data = unknown> extends CommonOptions {
   delay?: number;
 
   isLoading?: boolean;
-
-  data?: Data;
 }
 
 export interface UpdateOptions<T = unknown> extends Nullable<ToastOptions<T>> {
@@ -246,7 +237,7 @@ export interface UpdateOptions<T = unknown> extends Nullable<ToastOptions<T>> {
   render?: ToastContent<T>;
 }
 
-export interface ToastContainerProps extends CommonOptions {
+export interface ToastContainerProps extends CommonOptions, Pick<HTMLAttributes<HTMLElement>, 'aria-label'> {
   /**
    * An optional css class to set.
    */
@@ -287,6 +278,17 @@ export interface ToastContainerProps extends CommonOptions {
    * Limit the number of toast displayed at the same time
    */
   limit?: number;
+
+  /**
+   * Shortcut to focus the first notification with the keyboard
+   * `default: Alt+t`
+   *
+   * ```
+   * // focus when user presses ⌘ + F
+   * const matchShortcut = (e: KeyboardEvent) => e.metaKey && e.key === 'f'
+   * ```
+   */
+  hotKeys?: (e: KeyboardEvent) => boolean;
 }
 
 export interface ToastTransitionProps {
@@ -319,7 +321,6 @@ export interface ToastProps extends ToastOptions {
   draggableDirection?: DraggableDirection;
   progressClassName?: ToastClassName;
   className?: ToastClassName;
-  bodyClassName?: ToastClassName;
   deleteToast: () => void;
   theme: Theme;
   type: TypeOptions;
@@ -341,6 +342,9 @@ export interface Toast {
   content: ToastContent;
   props: ToastProps;
   toggle?: (v: boolean) => void;
+  removalReason?: true | undefined;
+  isActive: boolean;
+  staleId?: Id;
 }
 
 export type ToastItemStatus = 'added' | 'removed' | 'updated';
@@ -355,6 +359,7 @@ export interface ToastItem<Data = {}> {
   data: Data;
   icon?: ToastIcon;
   status: ToastItemStatus;
+  reason?: boolean | string;
 }
 
 export type OnChangeCallback = (toast: ToastItem) => void;
@@ -363,3 +368,5 @@ export type IdOpts = {
   id?: Id;
   containerId?: Id;
 };
+
+export type ClearWaitingQueueFunc = typeof clearWaitingQueue;
